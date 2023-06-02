@@ -1,16 +1,49 @@
 from django.shortcuts import render
+from django.views.generic.list import ListView
+from django.views.generic.detail import DetailView
 from polling.models import Poll
 from django.http import Http404
 
 
-def list_view(request):
-    context = {'polls': Poll.objects.all()}
-    return render(request, 'polling/list.html', context)
-    # we are using list.html, and pass the context as well
-    # for all elements returned by db query above pass to the list.html template
-    # how you pass variables to your templates
-    # when we look at list template we have an element called polls
-    # what is the name this context will see for this element? called polls
+# class ListView():
+#     def as_view(self):
+#         return self.get
+#
+#     def get(self, request):
+#         model_list_name = self.model.__name__.lower() + '_list' #poll_list
+#         context = {model_list_name: self.model.objects.all()}
+#         return render(request, self.template_name, context)
+
+
+class PollListView(ListView):
+    model = Poll
+    template_name = 'polling/list.html'
+
+
+# def list_view(request):
+#     context = {'polls': Poll.objects.all()}
+#     return render(request, 'polling/list.html', context)
+# we are using list.html, and pass the context as well
+# for all elements returned by db query above pass to the list.html template
+# how you pass variables to your templates
+# when we look at list template we have an element called polls
+# what is the name this context will see for this element? called polls
+class PollDetailView(DetailView):
+    model = Poll
+    template_name = 'polling/detail.html'
+
+    def post(self, request, *args, **kwargs):
+        poll = self.get_object()
+
+        if request.POST.get("vote") == "Yes":
+            poll.score += 1
+        else:
+            poll.score -= 1
+        poll.save()
+
+        context = {"object": poll,
+                   "poll": poll}
+        return render(request, "polling/detail.html", context)
 
 
 # Create your views here.
